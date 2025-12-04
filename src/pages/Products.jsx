@@ -1,82 +1,63 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import productsData from "../data/products.json";
-import { Helmet } from "react-helmet";
+import { useCart } from "../context/CartContext";
 
 
 const Products = () => {
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // ---------------- Pagination States ----------------
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4; 
+  const category = searchParams.get("category") || "all";
+  const page = parseInt(searchParams.get("page")) || 1;
+  const search = searchParams.get("search") || "";
 
-  // Filter products based on search and category
-  const filteredProducts = productsData.filter((item) => {
-  const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
-  const matchesCategory =
-    selectedCategory === "all" || item.category === selectedCategory;
-  return matchesSearch && matchesCategory; // remove positivePrice check
-});
+  const [currentPage, setCurrentPage] = useState(page);
+  const [searchQuery, setSearchQuery] = useState(search);
 
+  const itemsPerPage = 4;
 
+  // Filter products
+  const filteredProducts = productsData.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = category === "all" || p.category === category;
+    return matchesSearch && matchesCategory;
+  });
 
-
-  // ---------------- Ensure Pagination has only four product ----------------
+  // Pagination
   const indexOfLastProduct = currentPage * itemsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
-
-  const currentProducts = filteredProducts.slice(
-    indexOfFirstProduct,
-    indexOfLastProduct
-  );
-
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
+  // Sync URL with page, search, category
+  useEffect(() => {
+    const params = {};
+    if (searchQuery) params.search = searchQuery;
+    if (category !== "all") params.category = category;
+    params.page = currentPage;
+    setSearchParams(params);
+  }, [currentPage, searchQuery, category, setSearchParams]);
+
+  // Update state if URL changes
+  useEffect(() => {
+    setCurrentPage(page);
+    setSearchQuery(search);
+  }, [page, search,category]);
+
   const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
   };
+
+  const { addToCart } = useCart();
 
   return (
     <div className="pt-24 px-8 pb-16">
-      <h2 className="text-3xl font-bold text-center mb-8">Products</h2>
+      <h2 className="text-3xl font-bold text-center mb-8">
+        {category === "all" ? "Products" : category.toUpperCase()}
+      </h2>
 
-      {/* ----------------Search & Filter Section----------------- */}
-      <div className="flex flex-col md:flex-row gap-4 mb-8 justify-center">
-        <input
-          type="text"
-          placeholder="Search products..."
-          className="border px-4 py-2 rounded w-full md:w-1/3"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setCurrentPage(1); // reset page on search
-          }}
-        />
-
-        <select
-          className="border px-4 py-2 rounded w-full md:w-1/4"
-          value={selectedCategory}
-          onChange={(e) => {
-            setSelectedCategory(e.target.value);
-            setCurrentPage(1); // reset page on filter change
-          }}
-        >
-          <option value="all">All Categories</option>
-          <option value="sports">Sports</option>
-          <option value="clothing">Clothing</option>
-          <option value="electronics">Electronics</option>
-          <option value="home&kitchen">Kitchen</option>
-          <option value="shoes">Shoes</option>
-        </select>
-      </div>
-
-      {/* ---------------Product List------------------ */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-6 ">
-
+      {/* Product Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
         {currentProducts.length === 0 ? (
           <p className="col-span-full text-center text-gray-600">
             No products found.
@@ -87,7 +68,9 @@ const Products = () => {
               key={product.id}
               className="border rounded-lg p-4 shadow w-120 mx-auto hover:shadow-lg transition relative"
             >
-              <Link to={`/product/${product.id}`}>
+              <Link
+                to={`/product/${product.id}?category=${category}&page=${currentPage}`}
+              >
                 <div className="cursor-pointer">
                   <img
                     src={product.image}
@@ -96,24 +79,25 @@ const Products = () => {
                   />
                   <h3 className="font-semibold">{product.name}</h3>
                   <p className="text-gray-600 text-sm">{product.category}</p>
-                 <p className="font-bold mt-2">${Math.abs(product.price)}</p>       {/*ensure that negative price is not less then 0 */}
-                  <p className="font-bold mt-2">{product.description}</p>
+                  <p className="font-bold mt-2">${Math.abs(product.price)}</p>
+                  <p className="text-gray-600 text-sm mt-1">{product.description}</p>
                 </div>
               </Link>
 
-              <button className="bg-yellow-500 hover:bg-yellow-600 text-white mt-3 py-1 px-3 rounded w-full">
-                Add to Cart
-              </button>
+             <button
+  className="bg-yellow-500 hover:bg-yellow-600 text-white mt-3 py-1 px-3 rounded w-full"
+  onClick={() => addToCart(product)}
+>
+  Add to Cart
+</button>
             </div>
           ))
         )}
       </div>
 
-      {/* ---------------- Pagination Buttons ---------------- */}
+      {/* Pagination */}
       {totalPages > 1 && (
-       <div className="fixed bottom-0 left-0 w-full bg-white py-3 shadow-md flex justify-center gap-2 z-50">
-
-
+        <div className="fixed bottom-0 left-0 w-full bg-white py-3 shadow-md flex justify-center gap-2 z-50">
           <button
             className="px-3 py-1 border rounded"
             onClick={() => goToPage(currentPage - 1)}
@@ -122,15 +106,15 @@ const Products = () => {
             Prev
           </button>
 
-          {[...Array(totalPages)].map((_, index) => (
+          {[...Array(totalPages)].map((_, i) => (
             <button
-              key={index}
-              onClick={() => goToPage(index + 1)}
+              key={i}
+              onClick={() => goToPage(i + 1)}
               className={`px-3 py-1 border rounded ${
-                currentPage === index + 1 ? "bg-gray-800 text-white" : ""
+                currentPage === i + 1 ? "bg-gray-800 text-white" : ""
               }`}
             >
-              {index + 1}
+              {i + 1}
             </button>
           ))}
 
@@ -141,7 +125,6 @@ const Products = () => {
           >
             Next
           </button>
-
         </div>
       )}
     </div>
