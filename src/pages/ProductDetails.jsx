@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import products from "../data/products.json";
 import { Helmet } from "react-helmet";
+import { useCart } from "../context/CartContext";
 
 
 const ProductDetails = () => {
@@ -11,6 +12,7 @@ const ProductDetails = () => {
   if (!product) {
     return <h2 className="text-center mt-20">Product not found</h2>;
   }
+  const { addToCart } = useCart();
 
   return (
     <div className="max-w-4xl mx-auto p-6 mt-20">
@@ -30,9 +32,12 @@ const ProductDetails = () => {
           <p className="text-xl text-gray-700 mt-2">${Math.abs(product.price)}</p>
           <p className="mt-4 text-gray-600">{product.description}</p>
 
-          <button className="mt-6 px-6 py-3 bg-black text-white rounded hover:bg-gray-800">
-            Add to Cart
-          </button>
+          <button
+  className="mt-6 px-6 py-3 bg-black text-white rounded hover:bg-gray-800"
+  onClick={() => addToCart(product)}
+>
+  Add to Cart
+</button>
         </div>
       </div>
     </div>
