@@ -4,7 +4,7 @@
     "name": "Football",
     "category": "sports",
     "price": -25,
-    "image": "/products/football.jpg",
+    "image": "/products/football.webp",
     "description": "A durable, high-quality football designed for both training and casual play. Provides excellent grip and control."
   },
   {
@@ -60,7 +60,7 @@
     "id": 8,
     "name": "Non-stick Frying Pan",
     "price": 25,
-   "category": "home&kitchen",
+   "category": "kitchen",
    "image": "/products/fryingpan.jpg",
     "description": "Durable frying pan with a non-stick coating."
   },
@@ -68,7 +68,7 @@
     "id": 9,
     "name": "Water Bottle",
     "price": 10,
-    "category": "home&kitchen",
+    "category": "kitchen",
     "image": "/products/Waterbotle.jpg",
     "description": "1-liter BPA-free bottle for outdoor and gym use."
   },
